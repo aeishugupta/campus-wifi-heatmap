@@ -1,6 +1,7 @@
-
+from classification import classify_wifi
 import pandas as pd
 from database import connect_database
+
 
 
 def get_wifi_readings():
@@ -17,7 +18,25 @@ def get_wifi_readings():
     # Convert MongoDB documents into a DataFrame
     df = pd.DataFrame(readings)
 
+    # Classify each Wi-Fi reading
+    required_columns = [
+        "signal_strength",
+        "latency_ms",
+        "packet_loss_percent"
+    ]
+
+    if not df.empty and all(col in df.columns for col in required_columns):
+        df["wifi_quality"] = df.apply(
+            lambda row: classify_wifi(
+                row["signal_strength"],
+                row["latency_ms"],
+                row["packet_loss_percent"]
+            ),
+            axis=1
+        )
+
     return df
+
 
 
 def analyze_wifi_data():
@@ -77,6 +96,26 @@ def analyze_by_location():
     ).reset_index()
 
     location_stats = location_stats.round(2)
+
+
+    # Classify each location using average measurements
+    location_stats["wifi_quality"] = location_stats.apply(
+        lambda row: classify_wifi(
+            row["average_signal"],
+            row["average_latency"],
+            row["average_packet_loss"]
+        ),
+        axis=1
+    )
+
+
+
+    # Require multiple readings for location-level classification
+    location_stats.loc[
+        location_stats["total_readings"] < 5,
+        "wifi_quality"
+    ] = "Insufficient Data"
+
 
     print("\n--- Location-wise Wi-Fi Analysis ---")
     print(location_stats.to_string(index=False))
