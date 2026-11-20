@@ -1,14 +1,6 @@
-# Database credentials
 .env
-.env.*
-
-# Virtual environment
 .venv/
-venv/
-
-# Python cache
+.venv313/
 __pycache__/
 *.pyc
-
-# VS Code settings
-.vscode/
+.streamlit/secrets.toml
